@@ -1,4 +1,4 @@
-from shot import application, route, render_template_str
+from shot import application, route, render
 
 
 @route('/')
@@ -6,9 +6,14 @@ def main(request):
     body = '''
 
 <body>
-<a href="/hello">Test templates</a>
+<p>LINKS:</p>
+<ul>
+<li><a href="/hello">Test templates</a></li>
+<li><a href="/nice">Nice page / BS4</a></li>
+<li><a href="/debug">DEBUG ERROR page</a></li>
+<li><a href="/404">404 ERROR page</a></li>
+</ul>
 </body>
-
 
 '''
     return "Hello, it's a test of brand new micro web framework :)" + body
@@ -18,18 +23,46 @@ def view_name(request):
     return "My name is John Stark"
 
 @route('/hello')
-def hello():
+def hello(request):
+    import datetime
     template = """
     <h1>Hello to you!</h1>
 
     Today is {{ date }}
     <br/>
-    {% if name == "Alexey" %}Hello dearest friend Alexey! {%endif%}
+    Hello friend: {{ name }}!<br/>
+    Name in upper: {{ name|upper }}<br/>
+    Name in upper/lower: {{ name|upper|lower }}<br/>
+
+    {% if name == "Alexey" %}Hello dearest friend {{ name }}! {% endif %}
     <br/>
 
-    {% if name == "vasya" %}Hello Vasya!{% else %}Hello: {{ name }}{% endif %}
+    {% if name == "vasya" %}ddddd{%endif %}<br/>
+    <ul>
+        {% for friend in friends %}
+        <li>FRIEND: {{ friend }}</li>
+            {% for e in enemies %}
+                <li>SUB item: {{ e}}</li>
+                {% if e == "3" %}
+                <li>LUCKY NUMBER 3!!!!!!!</li>
+                {%endif%}
+            {% endfor %}
+        {% endfor %}      
+    </ul>
 
-    {% block content %}hehehee{% endblock %}
+    {% if name == "Alexey" %}<p>YOU SEE THIS?<br/> {% if surname == "Boobin" %}NESTED: {{ surname|upper }}{%endif%}{% endif %}
 
     """
-    return render_template_str(template, {'date': datetime.datetime.utcnow().strftime("%a, %d %b %Y %X"), "name": "Alexey"})
+    return render(template, {'date': datetime.datetime.utcnow().strftime("%a, %d %b %Y %X"), "enemies": [1,2,3],  "surname": "Boobin", "name": "Alexey", "friends": ["John", "Vasta", "Boobaoom"]})
+
+@route("/nice")
+def nice(request):
+    return render('shot/assets/exc.html')
+
+
+@route("/debug")
+def error_page(request):
+    template = """
+    {% if x y %}
+    """
+    return render(template)
