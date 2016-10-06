@@ -28,6 +28,10 @@ def hello(request):
     template = """
     <h1>Hello to you!</h1>
 
+    {% block title %}
+    <p>TITLE BEFORE</p>
+    {% endblock %}
+
     Today is {{ date }}
     <br/>
     Hello friend: {{ name }}!<br/>
@@ -51,6 +55,10 @@ def hello(request):
     </ul>
 
     {% if name == "Alexey" %}<p>YOU SEE THIS?<br/> {% if surname == "Boobin" %}NESTED: {{ surname|upper }}{%endif%}{% endif %}
+
+    {% block title %}
+    changing title afterwards!!!
+    {% endblock %}
 
     """
     return render(template, {'date': datetime.datetime.utcnow().strftime("%a, %d %b %Y %X"), "enemies": [1,2,3],  "surname": "Boobin", "name": "Alexey", "friends": ["John", "Vasta", "Boobaoom"]})

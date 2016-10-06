@@ -16,14 +16,21 @@
             <h2 class="display-4">Template Syntax Error</h2>
             <br/>
             <br/>
-            <blockquote class="blockquote">
-                {{ message }}
-                {% if from_file %} <footer class="blockquote-footer">
-                    {{ template }} 
-                </footer>{% endif %} 
+            {% if url %}<p>URL: <a href="{{ url }}">{{ url }}</a></p>{% endif %}
+            {% if view %}<p>View function: <code>{{ view }}</code></p>{% endif %}
+            {% if err.line_num %}<p>Line: <mark>#{{ err.line_num }}</mark></p>{% endif %}
+            <p>Error: <strong>{{ err.msg }}</strong></p>
+            {% if err.block %}
+                <code style="margin-left:20px;">{{ err.block }}</code>
+            {% endif %}
+
+
+            {% if from_file %} <footer class="blockquote-footer">
+                {{ template }} 
+            </footer>{% endif %} 
             </blockquote>
             <br/>
-            <hr>
+            <hr style="margin-top:45px;">
             <p style="font-size: small;">You see this because <kbd>debug</kbd> is enabled:<br/><pre><code>application.setting['DEBUG'] = True</code></pre></p>
 
         </div>

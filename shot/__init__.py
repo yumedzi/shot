@@ -57,7 +57,7 @@ def application(environ, start_response):
         return [data]
     except TemplateSyntaxError as err:
         if settings['DEBUG']:
-            return [render('shot/assets/exc.html', {'message': err.msg})]
+            return [render('shot/assets/exc.html', {'err': err, 'url': environ['PATH_INFO'], 'view': view_function.__name__})]
         else:
             return [render('shot/assets/500.html')]
     except RouteNotFound as err:
