@@ -70,4 +70,4 @@ def application(environ, start_response):
             debug_context = {'err': err, 'traceback': trace_as_html, 'url': environ['PATH_INFO'], 'view': view_function.__name__}
             return [render(ASSETS_DIR + '500.html', debug_context)]
         else:
-            return [render(ASSETS_DIR + '500.html')]
+            return [render(ASSETS_DIR + '500.html', {'err': err})]

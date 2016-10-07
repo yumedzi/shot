@@ -17,10 +17,17 @@
             <br/>
             {% if url %}<p>URL: <a href="{{ url }}">{{ url }}</a></p>{% endif %}
             {% if view %}<p>View function: <code>{{ view }}</code></p>{% endif %}
-            <p>Error: <strong>{{ err }}</strong></p>
+            {% if err %}<p>Error: <strong>{{ err }}</strong></p>{% endif %}
             {% if traceback %}<p style="margin-left: 15px;"><code style="font-size: small;">{{ traceback }}</code></p>{% endif %}
-            {% if err %}<hr><p style="font-size: small;">You see this because <kbd>debug</kbd> is enabled:<br/><pre><code>application.settings['DEBUG'] = True</code></pre></p>{% endif %}
-
+            <hr>
+            <div class="row">
+              <div class="col-sm-8">
+                {% if traceback %}<p style="font-size: small;">You see this because <kbd>debug</kbd> is enabled:<br/><pre><code>application.settings['DEBUG'] = True</code></pre></p>{% endif %}
+                </div>
+              <div class="col-sm-4 ">
+                <div class="d-inline pull-xs-right" style=""><span style="background-color:#60CCF0;">[_]</span> shot</div>
+              </div>
+            </div>
         </div>
     </div>
 

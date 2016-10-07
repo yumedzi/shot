@@ -19,19 +19,25 @@
                 <p>Requested page is not found: <strong>{{ route }}</strong></p> 
 
                 {% if routes %}
-                <div class="panel panel-info">List of available routes:
-                <ul>
-                    {% for r in routes %}
-                    <li><a href="{{ r }}">{{ r }}</a></li>
-                    {% endfor %}
-                </ul>
+                <div class="alert alert-success">List of available routes:
+                    <ul>
+                        {% for r in routes %}
+                        <li><a href="{{ r }}">{{ r }}</a></li>
+                        {% endfor %}
+                    </ul>
                 </div>
                 {% endif %}
             </blockquote>
-            <br/>
             
-            {% if routes %}<hr><p style="font-size: small;">You see this because <kbd>debug</kbd> is enabled:<br/><pre><code>application.settings['DEBUG'] = True</code></pre></p>{% endif %}
-
+            <hr/>
+            <div class="row">
+              <div class="col-sm-8">
+                {% if routes %}<p style="font-size: small;">You see this because <kbd>debug</kbd> is enabled:<br/><pre><code>application.settings['DEBUG'] = True</code></pre></p>{% endif %}
+                </div>
+              <div class="col-sm-4 ">
+                <div class="d-inline pull-xs-right" style=""><span style="background-color:#60CCF0;">[_]</span> shot</div>
+              </div>
+            </div>
         </div>
     </div>
 

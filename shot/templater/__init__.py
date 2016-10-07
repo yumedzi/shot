@@ -23,10 +23,10 @@ def _get_item(expr, item, call=False):
             raise TemplateSyntaxError("Can't evaluate expression", "%s.%s" % (expr, item))
     if call:
         if not callable(expr):
-            raise TemplateSyntaxError("Wrong pipe (not callable): %s" % item)
+            raise TemplateSyntaxError("Wrong pipe (not callable)", expr)
         expr = expr()
     elif callable(expr):
-        raise TemplateSyntaxError("Wrong attribute (it is callable): %s" % item)
+        raise TemplateSyntaxError("Wrong attribute (it is callable)", "%s.%s" % (expr, item))
     return expr
 
 def _calc_expression(expr, context):
@@ -139,7 +139,7 @@ class ForNode:
         return "<FOR %s IN %s>" % (self.loop_var, self.loop_source)
 
 class BlockNode:
-    def __init__(self, name):
+    def __init__(self, name, line_num=None):
         self.name = name
         self.stack = []
 
@@ -154,6 +154,24 @@ class BlockNode:
 
     def __str__(self):
         return "<BLOCK %s>" % self.name
+
+class WithNode:
+    def __init__(self, block, parent, line_num=None):
+        with_items = block.split()
+        if len(with_items) != 4 or with_items[2] != 'as': raise TemplateSyntaxError("Wrong {% with var as alias %} syntax", block, line_num)
+        self.variable, self.alias, self.stack, self.parent = with_items[1], with_items[3], [], parent
+        
+
+    def add(self, node):
+        self.stack.append(node)
+
+    def render(self, context):
+        fixed_context = dict(context)
+        fixed_context.update({self.alias: self.variable})
+        return ''.join([node.render(fixed_context) for node in self.stack])
+
+    def __str__(self):
+        return "<WITH %s>" % self.alias
 
 class Templater:
     def __init__(self, template, context=None, from_file=False):
@@ -258,6 +276,16 @@ class Templater:
                         raise TemplateSyntaxError("Wrong syntax for {% extends ... %}", part, line_num)
                     template_filename = ext_items[1].replace("'", '').replace('"', '')
                     self.extend(Templater(template_filename, {}, True))
+                elif block.startswith("with"):
+                    new_node = WithNode(block, self.current_section, line_num)
+                    self.current_section.add(new_node)
+                    self.current_section = new_node
+                elif block.startswith("endwith"):
+                    if block != "endwith":
+                        raise TemplateSyntaxError("Wrong {% endwith %} syntax", part, line_num)
+                    if not isinstance(self.current_section, WithNode):
+                        raise TemplateSyntaxError("Wrong {% endwith %} placement", part, line_num)
+                    self.current_section = self.current_section.parent
             else:
                 print("NODE: ", self.current_section)
                 self.current_section.add(StaticNode(part))
@@ -271,7 +299,7 @@ class Templater:
         if not context:
             context = self.context
         if not self.current_section is self:
-            raise TemplateSyntaxError("Wrong ending of template, %s is not closed" % str(self.current_section))
+            raise TemplateSyntaxError("Wrong ending of template, %s is not closed" % self.current_section)
         result = []
         for node in self.stack:
             result.append(node.render(context))

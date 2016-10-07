@@ -25,41 +25,7 @@ def view_name(request):
 @route('/hello')
 def hello(request):
     import datetime
-    template = """
-    {% extends "basis.html" %}
-
-    {% block content %}
-    <h1>Hello to you!</h1>
-
-    Today is {{ date }}
-    <br/>
-    Hello friend: {{ name }}!<br/>
-    name|upper: {{ name|upper }}<br/>
-    name|upper|lower: {{ name|upper|lower }}<br/>
-
-    {% if name == "Alexey" %}Hello {{ name }} (IF worked!){% endif %}
-    <br/>
-
-    {% if name == "vasya" %}ddddd{%endif %}<br/>
-    <ul>
-        {% for friend in friends %}
-        <li>FRIEND: {{ friend }}</li>
-            {% for e in enemies %}
-                <li>SUB item: {{ e }} (nested FOR)</li>
-                {% if e == "3" %}
-                <li style="margin-left: 20px;">LUCKY NUMBER 3 (nested IF in FOR is working)</li>
-                {%endif%}
-            {% endfor %}
-        {% endfor %}      
-    </ul>
-
-    {% if name == "Alexey" %}<p>YOU SEE THIS?<br/> {% if surname == "Boobin" %}NESTED: {{ surname|upper }}{%endif%}{% endif %}
-    {% endblock %}
-
-    {% block title %}
-    Block Title was changed OK!
-    {% endblock %}
-    """
+    template = 'test.html'
     return render(template, {'date': datetime.datetime.utcnow().strftime("%a, %d %b %Y %X"), "enemies": [1,2,"3"],  "surname": "Boobin", "name": "Alexey", "friends": ["John", "Vasta", "Boobaoom"]})
 
 

@@ -29,10 +29,15 @@
                 {{ template }} 
             </footer>{% endif %} 
             </blockquote>
-            <br/>
-            <hr style="margin-top:45px;">
-            <p style="font-size: small;">You see this because <kbd>debug</kbd> is enabled:<br/><pre><code>application.settings['DEBUG'] = True</code></pre></p>
-
+            <hr>
+            <div class="row">
+              <div class="col-sm-8">
+                {% if err %}<p style="font-size: small;">You see this because <kbd>debug</kbd> is enabled:<br/><pre><code>application.settings['DEBUG'] = True</code></pre></p>{% endif %}
+                </div>
+              <div class="col-sm-4 ">
+                <div class="d-inline pull-xs-right" style=""><span style="background-color:#60CCF0;">[_]</span> shot</div>
+              </div>
+            </div>
         </div>
     </div>
 
