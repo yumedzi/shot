@@ -4,6 +4,7 @@ import datetime
 import re
 import sys
 import os
+import traceback
 from ast import literal_eval as eval
 from collections import OrderedDict as odict
 from operator import eq, gt, lt, contains
@@ -15,11 +16,12 @@ HEADERS = [
     ('Content-Type', 'text/html'),
     #('Server', str(sys.version.split(maxsplit=1)[0]))
 ]
-settings = {'DEBUG': True, 
-            'ENCODING': 'utf-8', 
-            'TEMPLATES_DIR': 'templates',
-            'BASE_DIR': os.path.dirname(os.path.abspath(sys.argv[1]))
-            }
+settings = dict(
+    DEBUG=True,
+    ENCODING='utf-8', 
+    TEMPLATES_DIR='templates',
+    BASE_DIR=os.getcwd())
+ASSETS_DIR = os.path.dirname(__file__) + '/assets/'
 APP_ROUTES = {}
 ROUTES_TO_ADD = []
 
@@ -48,17 +50,24 @@ def application(environ, start_response):
         status_code, view_function = APP_ROUTES[environ['PATH_INFO']]
     except KeyError:
         start_response("404 Page not found", headers)
-        return [render('shot/assets/404.html', {'route': environ['PATH_INFO'], 'routes': APP_ROUTES if settings['DEBUG'] else None})]
+        return [render(ASSETS_DIR + '404.html', {'route': environ['PATH_INFO'], 'routes': APP_ROUTES if settings['DEBUG'] else None})]
     start_response(status_code, headers)
     try:
         data = view_function(environ)
         if isinstance(data, str):
             return [data.encode(settings.get('ENCODING', 'utf-8'))]
         return [data]
+    except RouteNotFound as err:
+        return [render(ASSETS_DIR + '404.html', {'message': err.msg, 'routes': APP_ROUTES if settings['DEBUG'] else None})]
     except TemplateSyntaxError as err:
         if settings['DEBUG']:
-            return [render('shot/assets/exc.html', {'err': err, 'url': environ['PATH_INFO'], 'view': view_function.__name__})]
+            return [render(ASSETS_DIR +'exc.html', {'err': err, 'url': environ['PATH_INFO'], 'view': view_function.__name__})]
         else:
-            return [render('shot/assets/500.html')]
-    except RouteNotFound as err:
-        return [render('shot/assets/404.html', {'message': err.msg, 'routes': APP_ROUTES if settings['DEBUG'] else None})]
+            return [render(ASSETS_DIR +'500.html')]
+    except Exception as err:
+        if settings['DEBUG']:
+            trace_as_html = traceback.format_exc().replace("\n", '<br/>')
+            debug_context = {'err': err, 'traceback': trace_as_html, 'url': environ['PATH_INFO'], 'view': view_function.__name__}
+            return [render(ASSETS_DIR + '500.html', debug_context)]
+        else:
+            return [render(ASSETS_DIR + '500.html')]

@@ -13,17 +13,13 @@
   <body>
     <div class="container">
         <div class="jumbotron" style="margin-top:10px;">
-            <h2 class="display-4"><strong>500</strong> / Internal Server Error</h2>
+            <h2 class="display-4"><span style="font-weight: 800;">500</span> / Internal Server Error</h2>
             <br/>
-            <br/>
-            <blockquote class="blockquote">
-                There is an error in web application <br/> 
-                {% if message %}
-                    <p>{{ message }}</p>
-                {% endif %}
-            </blockquote>
-            <br/>
-            {% if message %}<hr><p style="font-size: small;">You see this because <kbd>debug</kbd> is enabled:<br/><pre><code>application.setting['DEBUG'] = True</code></pre></p>{% endif %}
+            {% if url %}<p>URL: <a href="{{ url }}">{{ url }}</a></p>{% endif %}
+            {% if view %}<p>View function: <code>{{ view }}</code></p>{% endif %}
+            <p>Error: <strong>{{ err }}</strong></p>
+            {% if traceback %}<p style="margin-left: 15px;"><code style="font-size: small;">{{ traceback }}</code></p>{% endif %}
+            {% if err %}<hr><p style="font-size: small;">You see this because <kbd>debug</kbd> is enabled:<br/><pre><code>application.settings['DEBUG'] = True</code></pre></p>{% endif %}
 
         </div>
     </div>

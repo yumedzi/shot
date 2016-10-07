@@ -156,9 +156,8 @@ class BlockNode:
         return "<BLOCK %s>" % self.name
 
 class Templater:
-    def __init__(self, template, context=None):
+    def __init__(self, template, context=None, from_file=False):
         from shot import settings
-        # check is file path passed
         if template.endswith(".html") or template.endswith(".htm"):
             template_candidates = []
             if os.sep in template:
@@ -171,6 +170,9 @@ class Templater:
                         break
                     except OSError:
                         pass
+            else:
+                if from_file:
+                    raise TemplateSyntaxError("Template not found", template)
         self.stack = []
         self.parent = self
         self.current_section = self
@@ -180,6 +182,10 @@ class Templater:
 
     def add(self, node):
         self.stack.append(node)
+
+    def extend(self, new_template):
+        new_template.process()
+        self.stack.extend(new_template.stack)
 
     def process(self):
         line_num = 1
@@ -223,11 +229,9 @@ class Templater:
                         raise TemplateSyntaxError("Wrong {%% endfor %%} placement", part, line_num)
                     self.current_section = self.current_section.parent
                 elif block.startswith("block"):
-                    print(">>>>>>>", self.current_section)
                     if self.current_section != self:
-                        raise TemplateSyntaxError("Wrong {% block ... %} placement - it can't be nested", part, line_num)
+                        raise TemplateSyntaxError("Wrong {% block ... %} placement - it can't be nested in other nodes", part, line_num)
                     block_items = block.split()
-                    print(">>>>>>>>>", block_items)
                     if block_items[0] != "block" or len(block_items) != 2:
                         raise TemplateSyntaxError("Wrong {% block ... %} syntax", part, line_num)
                     name = block_items[1]
@@ -242,10 +246,18 @@ class Templater:
                         self.current_section = new_node
                 elif block.startswith("endblock"):
                     if block != "endblock":
-                        raise TemplateSyntaxError("Wrong {%% endblock %%} syntax", part, line_num)
+                        raise TemplateSyntaxError("Wrong {% endblock %} syntax", part, line_num)
                     if not isinstance(self.current_section, BlockNode):
-                        raise TemplateSyntaxError("Wrong {%% endblock %%} placement, you should close other nodes first", part, line_num)
+                        raise TemplateSyntaxError("Wrong {% endblock %} placement, you should close other nodes first", part, line_num)
                     self.current_section = self
+                elif block.startswith("extends"):
+                    if self.current_section != self:
+                        raise TemplateSyntaxError("Wrong placement of {% extends ... %} - it can't be nested in other nodes", part, line_num)
+                    ext_items = block.split()
+                    if len(ext_items) != 2 or ext_items[0] != "extends":
+                        raise TemplateSyntaxError("Wrong syntax for {% extends ... %}", part, line_num)
+                    template_filename = ext_items[1].replace("'", '').replace('"', '')
+                    self.extend(Templater(template_filename, {}, True))
             else:
                 print("NODE: ", self.current_section)
                 self.current_section.add(StaticNode(part))
@@ -253,7 +265,9 @@ class Templater:
 
     def render(self, context=None):
         from shot import settings
+        print(settings)
         self.process()
+        print(self.parts)
         if not context:
             context = self.context
         if not self.current_section is self:
