@@ -287,15 +287,12 @@ class Templater:
                         raise TemplateSyntaxError("Wrong {% endwith %} placement", part, line_num)
                     self.current_section = self.current_section.parent
             else:
-                print("NODE: ", self.current_section)
                 self.current_section.add(StaticNode(part))
         return ""
 
     def render(self, context=None):
         from shot import settings
-        print(settings)
         self.process()
-        print(self.parts)
         if not context:
             context = self.context
         if not self.current_section is self:

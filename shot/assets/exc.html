@@ -9,6 +9,16 @@
 
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.4/css/bootstrap.min.css" integrity="2hfp1SzUoho7/TsGGGDaFdsuuDL0LX2hnUp6VkX3CUQ2K4K+xjboZdsXyp4oUHZj" crossorigin="anonymous">
+    <style>
+    #shot {
+          background: #60CCF0; /* For browsers that do not support gradients */
+          background: -webkit-linear-gradient(#eceeef, #60CCF0); /* For Safari 5.1 to 6.0 */
+          background: -o-linear-gradient(#eceeef, #60CCF0); /* For Opera 11.1 to 12.0 */
+          background: -moz-linear-gradient(#eceeef, #60CCF0); /* For Firefox 3.6 to 15 */
+          background: linear-gradient(#eceeef, #60CCF0); /* Standard syntax */
+          color: #086A87;
+      }
+    </style>
   </head>
   <body>
     <div class="container">
@@ -35,7 +45,7 @@
                 {% if err %}<p style="font-size: small;">You see this because <kbd>debug</kbd> is enabled:<br/><pre><code>application.settings['DEBUG'] = True</code></pre></p>{% endif %}
                 </div>
               <div class="col-sm-4 ">
-                <div class="d-inline pull-xs-right" style=""><span style="background-color:#60CCF0;">[_]</span> shot</div>
+                <div class="pull-xs-right" style="display:inline; vertical-align:middle;"><span id="shot">[_]</span> shot</div>
               </div>
             </div>
         </div>

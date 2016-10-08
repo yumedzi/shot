@@ -8,6 +8,7 @@ def main(request):
 <body>
 <p>LINKS:</p>
 <ul>
+<li><a href="/name">Simple var</a></li>
 <li><a href="/hello">Test templates</a></li>
 <li><a href="/debug">DEBUG ERROR page</a></li>
 <li><a href="/404">404 ERROR page</a></li>
