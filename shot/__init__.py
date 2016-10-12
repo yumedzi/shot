@@ -4,12 +4,13 @@ import datetime
 import re
 import sys
 import os
+import time
 import traceback
 from ast import literal_eval as eval
 from collections import OrderedDict as odict
 from operator import eq, gt, lt, contains
 
-from shot.exc import ShotException, RouteNotFoundError, process_generic_exc
+from shot.exc import ShotException, RouteNotFoundError, process_generic_exc, TemplateSyntaxError
 from shot.templater import Templater
 
 HEADERS = [
@@ -43,21 +44,23 @@ def process_routes():
                         if callable(obj) and hasattr(obj, "url")})
 
 def application(environ, start_response):
-    headers = HEADERS
-    process_routes()
     try:
+        t1 = time.time()
+        headers = HEADERS
+        process_routes()
         try:
-            status_code, view_function = APP_ROUTES[environ['PATH_INFO']]
-            environ['VIEW_FUNCTION'] = view_function.__name__
-        except KeyError:
-            raise RouteNotFoundError(environ['PATH_INFO'])
-
-        start_response(status_code, headers)
-        data = view_function(environ)
-        if isinstance(data, str):
-            return [data.encode(settings.get('ENCODING', 'utf-8'))]
-        return [data]
-    except ShotException as err:
-        return err.render(environ)
-    except Exception as err:
-        return process_generic_exc(err, environ)
+            try:
+                status_code, view_function = APP_ROUTES[environ['PATH_INFO']]
+                environ['VIEW_FUNCTION'] = view_function.__name__
+            except KeyError: raise RouteNotFoundError(environ['PATH_INFO'])
+            start_response(status_code, headers)
+            data = view_function(environ)
+            if isinstance(data, str):
+                return [data.encode(settings.get('ENCODING', 'utf-8'))]
+            return [data]
+        except ShotException as err:
+            return err.render(environ)
+        except Exception as err:
+            return process_generic_exc(err, environ)
+    finally:
+        print(">>> %s: %s ms" % (environ['PATH_INFO'], round(time.time() - t1, 5)*1000))

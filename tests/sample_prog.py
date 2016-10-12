@@ -33,7 +33,7 @@ def hello(request):
 @route("/debug")
 def error_page(request):
     template = """
-    {% if x y %}
+    {% if 11 x %}
     """
     return render(template)
 
