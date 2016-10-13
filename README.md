@@ -65,6 +65,10 @@ Your brothers:
 * Running:
 
 ```sh
+python prog.py
+```
+or
+```sh
 gunicorn prog
 ```
 
