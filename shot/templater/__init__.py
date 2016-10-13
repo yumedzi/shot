@@ -2,11 +2,11 @@ import re
 import os
 import sys
 from collections import Iterable
-from operator import eq, gt, lt, contains, is_not, is_, and_, or_
+from operator import eq, not_, gt, lt, contains, is_not, is_, and_, or_
 
 from shot.exc import TemplateSyntaxError
 
-CONDITIONS_OPERATORS = {"=": eq, "==": eq, ">": gt, "<": lt, "is_not": is_not, "is": is_,
+CONDITIONS_OPERATORS = {"=": eq, "not": not_, "==": eq, ">": gt, "<": lt, "is_not": is_not, "is": is_,
                         "and": and_, "AND": and_, "&": and_, "or": or_, "OR": or_, "|": or_,
 }
 
@@ -64,14 +64,19 @@ class IfNode:
     def __init__(self, block, parent, line_num=None):
         self.parent = parent
         condition_items = block.split()
-        if len(condition_items) not in (2, 4):
-            raise TemplateSyntaxError("Wrong IF syntax (only 1 or 2 arguments allowed)", "{%% %s %%}" %block, line_num)
-        try:
-            _, self.left, self.condition, self.right = condition_items
-        except ValueError:
-            self.left, self.condition, self.right = condition_items[1], "is_not", "None"
-        if self.condition not in CONDITIONS_OPERATORS:
-            raise TemplateSyntaxError("Wrong condition: {%% %s %%}" % block, line_num)
+        if len(condition_items) == 3:
+            if condition_items[1] != 'not':
+                raise TemplateSyntaxError("Wrong IF syntax (only 1 or 2 condition arguments allowed)", "{%% %s %%}" %block, line_num)
+            _, self.condition, self.left, self.right = *condition_items, None
+        elif len(condition_items) not in (2, 4):
+            raise TemplateSyntaxError("Wrong IF syntax (only 1 or 2 condition arguments allowed)", "{%% %s %%}" %block, line_num)
+        else:
+            try:
+                _, self.left, self.condition, self.right = condition_items
+            except ValueError:
+                self.left, self.condition, self.right = condition_items[1], "is_not", "None"
+            if self.condition not in CONDITIONS_OPERATORS:
+                raise TemplateSyntaxError("Wrong condition: {%% %s %%}" % block, line_num)
 
         self.true_stack, self.false_stack = [], []
         self.stack = self.true_stack
@@ -85,7 +90,12 @@ class IfNode:
 
     def render(self, context):
         result = []
-        if CONDITIONS_OPERATORS[self.condition](_calc_expression(self.left, context), eval(self.right)):
+        if self.right is not None:
+            bool_val = CONDITIONS_OPERATORS[self.condition](_calc_expression(self.left, context), eval(self.right))
+        else:
+            bool_val = CONDITIONS_OPERATORS[self.condition](_calc_expression(self.left, context))
+             
+        if bool_val:
             stack = self.true_stack
         else:
             stack = self.false_stack

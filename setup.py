@@ -2,7 +2,7 @@ from distutils.core import setup
 setup(
   name = 'shot',
   packages = ['shot', 'shot.exc', 'shot.templater'], 
-  version = '0.2',
+  version = '0.2.2',
   description = 'Super micro web framework for Python',
   author = 'Viktor Moyseyenko',
   author_email = 'vityok@gmail.com',

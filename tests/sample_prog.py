@@ -28,7 +28,14 @@ def view_name(request):
 def hello(request):
     import datetime
     template = 'test.html'
-    return render(template, {'date': datetime.datetime.utcnow().strftime("%a, %d %b %Y %X"), "enemies": [1,2,"3"],  "surname": "Boobin", "name": "Alexey", "friends": ["John", "Vasta", "Boobaoom"]})
+    context = {'date': datetime.datetime.utcnow().strftime("%a, %d %b %Y %X"), 
+               "enemies": [1,2,"3"],  "surname": "Boobin", "name": "Alexey", 
+               "friends": ["John", "Vasta", "Boobaoom"],
+               "empty_var": (),
+    }
+
+
+    return render(template, context)
 
 
 @route("/debug")
