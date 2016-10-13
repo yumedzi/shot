@@ -13,7 +13,7 @@ Features:
 # Current status #
 
 * routing - YES
-* wrapping REQUEST (multiform, POST data) - YES
+* wrapping REQUEST (GET/POST, form multipart data) - YES
 * template engine - YES
 * dev server - NO
 * parametrized routing - NO
@@ -53,7 +53,7 @@ def example(request):
 Your brothers:
 <ul>
 {% for brother in brothers %}
-<li> {{ brother }} </li>
+<li>Brother number {{ loopcounter }}: {{ brother }} </li>
 {% empty %}
 ... sorry, you don't have any left.
 {% endfor %}
@@ -65,6 +65,13 @@ Your brothers:
 ```sh
 gunicorn prog
 ```
+
+### Dev plan ###
+1. Dev server ---> 0.5
+2. Extended routing rules ---> 0.6
+3. ORM  ---> 0.7
+4. REST --- 0.8
+
 
 ### Documentation ###
 
