@@ -32,11 +32,9 @@ class TemplateSyntaxError(ShotException):
         return "TemplateSyntaxError: {msg}, block: {block}, line: #{line}".format(**data)
 
     def render(self, request):
-        # from shot.templater import render
         from shot import settings, ASSETS_DIR, render
-
         if settings['DEBUG']:
-            return [render(ASSETS_DIR +'exc.html', {'err': self, 'url': request['PATH_INFO'], 'view': request['VIEW_FUNCTION']})]
+            return [render(ASSETS_DIR +'exc.html', {'err': self, 'url': request.route, 'view': request.view_function})]
         else:
             return [render(ASSETS_DIR +'500.html')]
 
@@ -45,7 +43,7 @@ def process_generic_exc(err, request):
     from shot import settings, render, ASSETS_DIR
     if settings['DEBUG']:
         trace_as_html = traceback.format_exc().replace("\n", '<br/>')
-        debug_context = {'err': err, 'traceback': trace_as_html, 'url': request['PATH_INFO'], 'view': request['VIEW_FUNCTION']}
+        debug_context = {'err': err, 'traceback': trace_as_html, 'url': request.route, 'view': request.view_function}
         return [render(ASSETS_DIR + '500.html', debug_context)]
     else:
         return [render(ASSETS_DIR + '500.html', {'err': err})]
