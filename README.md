@@ -15,7 +15,8 @@ Features:
 * routing - YES
 * wrapping REQUEST (GET/POST, form multipart data) - YES
 * template engine - YES
-* dev server - NO
+* dev server - YES
+* reloading dev server in DEBUG - NO
 * parametrized routing - NO
 * Docs - NO
 * REST API batteries - NO
@@ -30,9 +31,7 @@ pip install shot, gunicorn
 * Example "prog.py":
 
 ```python
-#!python
-
-from shot import application, route, render
+from shot import application, route, render, run
 
 @route('/')
 def main(request):
@@ -41,8 +40,11 @@ def main(request):
 @route('/name')
 def example(request):
     return render('example.html', {'name': 'John Stark', 'brothers': ['Rickon', 'Bran', 'Robb']})
+
+if __name__ == '__main__':
+    run() # will run on localhost:8000
 ```
-* Template:
+* Template `'templates/example.html'`:
 
 ```html
 {% extends 'main.html' %}

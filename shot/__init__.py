@@ -148,7 +148,7 @@ def application(environ, start_response):
         return process_generic_exc(err, request)
 
 
-def run(host='', port=8080, app=application):
+def run(host='', port=8000, app=application):
     print("*** Running SHOT dev server on {host}:{port} ***".format(port=port, host=host if host else 'localhost'))
     httpd = make_server(host, port, app)
     httpd.serve_forever()
