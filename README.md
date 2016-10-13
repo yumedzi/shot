@@ -35,14 +35,14 @@ from shot import application, route, render, run
 
 @route('/')
 def main(request):
-    return "Hello World <br/> <a href='/name'>click me</a>"
+    return "Hello World"
 
 @route('/name')
 def example(request):
     return render('example.html', {'name': 'John Stark', 'brothers': ['Rickon', 'Bran', 'Robb']})
 
 if __name__ == '__main__':
-    run() # will run on localhost:8000
+    run()
 ```
 * Template `'templates/example.html'`:
 
@@ -71,6 +71,8 @@ or
 ```sh
 gunicorn prog
 ```
+
+* The web app will be hosted at `http://127.0.0.1:8000/`
 
 ### Dev plan ###
 1. Dev server ---> 0.5
