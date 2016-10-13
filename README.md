@@ -9,26 +9,66 @@ Features:
 * batteries for creating simple REST API.
 * injection of `request` object (WSGI request wrapper) into views like in Flask.
 * it can be used with SQLAlchemy as ORM.
- 
+
+# Current status #
+
+* routing - YES
+* wrapping REQUEST (multiform, POST data) - YES
+* template engine - YES
+* dev server - NO
+* parametrized routing - NO
+* Docs - NO
+* REST API batteries - NO
+* ORM integration batteries - NO
+
 # Example #
 
+```sh
+pip install shot, gunicorn
 ```
+
+* Example "prog.py":
+
+```python
 #!python
 
-from shot import application, route, run
+from shot import application, route, render
 
 @route('/')
-def main():
-    return "Hello World"
+def main(request):
+    return "Hello World <br/> <a href='/name'>click me</a>"
 
-if __name__ == '__main__':
-    run(application)
+@route('/name')
+def example(request):
+    return render('example.html', {'name': 'John Stark', 'brothers': ['Rickon', 'Bran', 'Robb']})
 ```
+* Template:
 
+```html
+{% extends 'main.html' %}
+
+{% block contents %}
+<p>Hello, {{ name|capitalize }}
+
+Your brothers:
+<ul>
+{% for brother in brothers %}
+<li> {{ brother }} </li>
+{% empty %}
+... sorry, you don't have any left.
+{% endfor %}
+</ul>
+{% endblock %}
+```
+* Running:
+
+```sh
+gunicorn prog
+```
 
 ### Documentation ###
 
-* [Docs]()
+... Will be here soon ...
 
 # Contacts #
 
