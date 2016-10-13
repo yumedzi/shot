@@ -1,4 +1,4 @@
-from shot import application, route, render
+from shot import application, route, render, run
 
 
 @route('/')
@@ -68,3 +68,6 @@ def view_post(request):
 
 
     return render(t)
+
+if __name__ == '__main__':
+    run('', 9999)

@@ -8,7 +8,6 @@ import time
 import traceback
 import cgitb
 import cgi
-from wsgiref.simple_server import make_server
 from ast import literal_eval as eval
 from collections import OrderedDict as odict
 from operator import eq, gt, lt, contains
@@ -22,7 +21,6 @@ HEADERS = [
 ]
 settings = dict(
     DEBUG=True,
-    SHOW_TIMER=False,
     ENCODING='utf-8', 
     TEMPLATES_DIR='templates',
     BASE_DIR=os.getcwd())
@@ -96,59 +94,32 @@ class HTTPRequest:
         if view_function:
             self.view_function = view_function
 
-def _show_timer(app):
-    'Simple timer decorator - show URL and time spent on it after rendering response'
-    @wraps(app)
-    def wrapper(environ, *args, **kwargs):
-        if settings['SHOW_TIMER']:
-            try:
-                t1 = time.time()
-                return app(environ, *args, **kwargs)
-            finally:
-                time_data = dict(method=environ['REQUEST_METHOD'], 
-                                route=environ['PATH_INFO'], 
-                                time=(time.time() - t1)*1000,
-                                host=environ['REMOTE_ADDR'])
-                print(">>> {host} - {method} {route}: {time:5.3f} ms".format(**time_data))
-        else:
-            return app(environ, *args, **kwargs)
-    return wrapper
-
-@_show_timer
 def application(environ, start_response):
     if settings['DEBUG']: cgitb.enable()
     request = HTTPRequest(environ)
-    response_started = False
-    headers = HEADERS
-    process_routes()
     try:
+        t1 = time.time()
+        process_routes()
         try:
-            status_code, view_function = APP_ROUTES[environ['PATH_INFO']]
-            request.view_function = view_function.__name__
-        except KeyError: raise RouteNotFoundError(request.route)
-        
-        # Eval view function
-        data = view_function(request)
-        headers = [
-            ('Content-type', 'text/html; charset=%s' % settings['ENCODING']),
-            ('Content-Length', str(len(data))),
-        ]
-        start_response(status_code, headers)
-        response_started = True
-        if isinstance(data, str):
-            return [data.encode(settings.get('ENCODING', 'utf-8'))]
-        return [data]
-    except ShotException as err:
-        if not response_started: 
-            start_response('500 Internal Server Error', headers)
-            response_started = True
-        return err.render(request)
-    except Exception as err:
-        if not response_started: start_response('500 Internal Server Error', headers)
-        return process_generic_exc(err, request)
-
-
-def run(host='', port=8080, app=application):
-    print("*** Running SHOT dev server on {host}:{port} ***".format(port=port, host=host if host else 'localhost'))
-    httpd = make_server(host, port, app)
-    httpd.serve_forever()
+            try:
+                status_code, view_function = APP_ROUTES[environ['PATH_INFO']]
+                request.view_function = view_function.__name__
+            except KeyError: raise RouteNotFoundError(request.route)
+            
+            # Eval view function
+            data = view_function(request)
+            headers = [
+                ('Content-type', 'text/html; charset=%s' % settings['ENCODING']),
+                ('Content-Length', str(len(data))),
+            ]
+            start_response(status_code, headers)
+            if isinstance(data, str):
+                return [data.encode(settings.get('ENCODING', 'utf-8'))]
+            return [data]
+        except ShotException as err:
+            return err.render(request)
+        except Exception as err:
+            return process_generic_exc(err, request)
+    finally:
+        time_data = dict(method=environ['REQUEST_METHOD'], route=environ['PATH_INFO'], time=(time.time() - t1)*1000)
+        print(">>> {method} {route}: {time:5.3f} ms".format(**time_data))
