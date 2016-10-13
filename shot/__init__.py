@@ -48,6 +48,9 @@ def process_routes():
 class HTTPRequest:
     def __init__(self, environ=None, view_function=None):
         self.method = 'GET'
+        self.GET = {}
+        self.POST = {}
+        self.FILES = {}
         mapping = dict(
             route='PATH_INFO',
             uri='RAW_URI',
@@ -62,9 +65,6 @@ class HTTPRequest:
         # print("ENV:", environ)
         if environ:
             for x, y in mapping.items(): setattr(self, x, environ.get(y, ''))
-            self.GET = {}
-            self.POST = {}
-            self.FILES = {}
             try:
                 if self.method == 'GET' and environ.get('QUERY_STRING', ''):
                     self.GET.update(dict([x.split("=") for x in environ.get('QUERY_STRING', '').split("&")]))
@@ -74,26 +74,23 @@ class HTTPRequest:
                         environ=environ,
                         keep_blank_values=True
                     )
-                    print(dir(post))
-                    print(post)
-
                     self._post = post
 
                     for field in post:
                         if getattr(post[field], "filename", None):
-                            print("%s is FILE" % field, post[field].filename)
-                            print("That file is closed?: ", post[field].file.closed)
-                            self.FILES[field] = post[field].file #TODO multiple files! 
+                            self.FILES[field] = post[field].file
+                        elif isinstance(post[field], list):
+                            self.FILES[field], self.POST[field] = [], []
+                            for item in post[field]:
+                                if getattr(item, "filename", None): self.FILES[field].append(item.file)
+                                else: self.POST[field].append(item.value)
+                            for dict_ in (self.FILES, self.POST):
+                                if len(dict_[field]) == 1: dict_[field] = dict_[field][0]
+                                if not dict_[field]: del dict_[field]
                         else:
-                            val = post.getvalue(field)
-                            self.POST[field] = val
-            except ZeroDivisionError:
+                            self.POST[field] = post.getvalue(field)
+            except:
                 pass
-            # try:
-            #     f = environ['wsgi.input'].read()
-            #     print("FILE:", f)
-            # except:
-            #     pass
         if view_function:
             self.view_function = view_function
 
@@ -124,4 +121,5 @@ def application(environ, start_response):
         except Exception as err:
             return process_generic_exc(err, request)
     finally:
-        print(">>> %s: %s ms" % (environ['PATH_INFO'], round(time.time() - t1, 5)*1000))
+        time_data = dict(method=environ['REQUEST_METHOD'], route=environ['PATH_INFO'], time=(time.time() - t1)*1000)
+        print(">>> {method} {route}: {time:5.3f} ms".format(**time_data))

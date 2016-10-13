@@ -52,6 +52,7 @@ def view_post(request):
         <input name="name2" type="hidden" value="3132123"/>
         <input name="password" type="password" value="AAAAVBBVCXSD"/><br/>
         <input name="some_file" type="file"/><br/>
+        <input name="some_file" type="file"/><br/>
         <button type="submit">SUBMIT</button>
 </form></body></html>
     '''
@@ -60,11 +61,10 @@ def view_post(request):
     print(">>> POST:", request.POST)
     print(">>> GET:", request.GET)
 
-    for file_ in request.FILES:
-        f = request.FILES[file_]
-        print("Found file:", dir(f))
-        print("------")
-        print(f.read())
+    for files_ in request.FILES:
+        for f in request.FILES[files_]:
+            print("------")
+            print(f.read())
 
 
     return render(t)
