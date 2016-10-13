@@ -39,7 +39,11 @@ def main(request):
 
 @route('/name')
 def example(request):
-    return render('example.html', {'name': 'John Stark', 'brothers': ['Rickon', 'Bran', 'Robb']})
+    context = dict(
+        name = 'John Stark',
+        brothers = ['Rickon', 'Bran', 'Robb']
+    )
+    return render('example.html', context)
 
 if __name__ == '__main__':
     run()
