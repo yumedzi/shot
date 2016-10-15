@@ -115,9 +115,10 @@ class ForNode:
             self.loop_var, self.loop_source= for_items[0], for_items[2]
             self.mode = 'list' 
         else:
-            if not re.match(r"for\s+[a-zA-Z]\w*\s*,\s*[a-zA-Z]\w*\s+in\s+[a-zA-Z]\w*(?:[\.|]items)?", block):
-                TemplateSyntaxError("Wrong {%% for X, Y in DICT %%} syntax: %s" % block, line_num)
+            if not re.match(r"^for\s+[a-zA-Z]\w*\s*,\s*[a-zA-Z]\w*\s+in\s+[a-zA-Z]\w*(?:[\.|]items)?$", block):
+                raise TemplateSyntaxError("Wrong {%% for X, Y in DICT %%} syntax: %s" % block, line_num)
             self.loop_source, _  = for_items.pop().replace('.items', '').replace('|items', ''), for_items.pop()
+            print(self.loop_source)
             self.loop_key, self.loop_value = ''.join(for_items).split(',')
             self.mode = 'dict'
         self.loop_stack, self.empty_stack = [], []
