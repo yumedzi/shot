@@ -12,6 +12,8 @@ name|upper|lower: {{ name|upper|lower }}<br/>
 {% if name == "Alexey" %}Hello {{ name }} (IF worked!){% endif %}
 <br/>
 
+{# <p>{% if '1' in ['1'] %}!!!{% endif %}</p> #}
+
 {% if not empty_var %}
 <p style="color: green">Testing IF NOT -- YOU SHOULD SEE THIS!!!</p>
 {% else %}<p style="color: red">Testing IF NOT -- YOU SHOULDNT SEE THIS!!!</p>

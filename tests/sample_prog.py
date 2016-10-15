@@ -9,6 +9,8 @@ def main(request):
 <p>LINKS:</p>
 <ul>
 <li><a href="/name">Simple var</a></li>
+<li><a href="/test_me/Johnny">Parametrized route - should output "Johnny"</a></li>
+<li><a href="/test_me_2/Sarah/3434/45.4/hehe">Cmplex Parametrized</a></li>
 <li><a href="/hello">Test templates</a></li>
 <li><a href="/debug">DEBUG ERROR page</a></li>
 <li><a href="/404">404 ERROR page</a></li>
@@ -47,6 +49,23 @@ def error_page(request):
 @route("/500")
 def view_500(request):
     return 1/0
+
+@route("/test_me/<name>")
+def view_parametrized(request, name):
+    return render('Your name is {{ name }}', {'name': name})
+
+
+@route("/test_me_2/<name>/<int:age>/<float:money>/<path:path>")
+def view_parametrized_complex(request, name, age, money, path):
+    tmpl = '''
+    <p>Name is {{name}}</p>
+    <p>Age is {{age}}</p>
+    <p>Money is {{money}}</p>
+    <p>Path is {{path}}</p>
+    '''
+
+    return render(tmpl, {'name': name, 'age': age, 'money': money, 'path': path})
+
 
 @route("/post")
 def view_post(request):

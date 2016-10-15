@@ -32,7 +32,7 @@
                 <div class="alert alert-success">List of available routes:
                     <ul>
                         {% for r in routes %}
-                        <li><a href="{{ r }}">{{ r }}</a></li>
+                        <li><a href="{{ r }}">{{ r|safe }}</a></li>
                         {% endfor %}
                     </ul>
                 </div>

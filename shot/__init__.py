@@ -9,16 +9,14 @@ import traceback
 import cgitb
 import cgi
 from wsgiref.simple_server import make_server
-from ast import literal_eval as eval
 from collections import OrderedDict as odict
 from operator import eq, gt, lt, contains
 
-from shot.exc import ShotException, RouteNotFoundError, process_generic_exc, TemplateSyntaxError
+from shot.exc import RouteFormatError, RouteNotFoundError, process_generic_exc, TemplateSyntaxError, ShotException
 from shot.templater import Templater
 
 HEADERS = [
     ('Content-Type', 'text/html'),
-    #('Server', str(sys.version.split(maxsplit=1)[0]))
 ]
 settings = dict(
     DEBUG=True,
@@ -27,14 +25,52 @@ settings = dict(
     TEMPLATES_DIR='templates',
     BASE_DIR=os.getcwd())
 ASSETS_DIR = os.path.dirname(__file__) + '/assets/'
-APP_ROUTES = odict()
+# APP_ROUTES = odict()
+APP_ROUTES = []
 ROUTES_TO_ADD = []
+ROUTE_TYPES = dict(
+    str='\w+',
+    int='\d+',
+    float='[\d\.]+',
+    path='[\w_\-\./]+',
+)
+
+class Route:
+    def __init__(self, url, status_code, function):
+        self.url = url
+        self.status_code = status_code
+        self.function = function
+        self.params = []
+        params_vars = []
+        for s in re.finditer(r'<\s*(?:(?P<type>str|int|float|path):)?\s*(?P<param>\w+)>\s*', url):
+            if s:
+                if s.group('param') in params_vars:
+                    raise RouteFormatError(url, 'Wrong route - repeated parameter')
+                type_ = s.group('type') or 'str'
+                if type_ not in ROUTE_TYPES:
+                    raise RouteFormatError(url, 'Wrong parameter type')
+                self.params.append((type_, s.group('param')))
+                params_vars.append(s.group('param'))
+        self.regexp = "^" + url
+        self.regexp += '?$' if self.regexp.endswith('/') else '/?$'
+        for t, p in self.params:
+            self.regexp = re.sub('<(?:{}:)?{}>'.format(t, p), '(?P<{}>{})'.format(p, ROUTE_TYPES[t]), self.regexp)
+
+    def __str__(self):
+        return self.url
+
+    def __call__(self, url):
+        match, kwargs = re.match(self.regexp, url), {}
+        if match:
+            for type_, param in self.params:
+                kwargs[param] = eval(type_ if not type_ == 'path' else 'str')(match.group(param))
+            return self.status_code, self.function, kwargs
+
 
 def route(url='', status_code="200 OK"):
     def deco(view_function):
-        view_function.url = url
-        view_function.status_code = status_code
-        APP_ROUTES[url] = (status_code, view_function)
+        new_route = Route(url, status_code, view_function)
+        APP_ROUTES.append(new_route)
         return view_function
     return deco
 
@@ -42,10 +78,6 @@ def render(template, context=None):
     'Simple wrapper for Templater'
     return Templater(template, context).render()
 
-def process_routes():
-    APP_ROUTES.update({ obj.url: (obj.status_code, obj) \
-                      for obj in globals().values() \
-                        if callable(obj) and hasattr(obj, "url")})
 
 class HTTPRequest:
     def __init__(self, environ=None, view_function=None):
@@ -64,7 +96,6 @@ class HTTPRequest:
             language='HTTP_ACCEPT_LANGUAGE',
             content_length='CONTENT_LENGTH',
         )
-        # print("ENV:", environ)
         if environ:
             for x, y in mapping.items(): setattr(self, x, environ.get(y, ''))
             try:
@@ -120,15 +151,17 @@ def application(environ, start_response):
     request = HTTPRequest(environ)
     response_started = False
     headers = HEADERS
-    process_routes()
     try:
-        try:
-            status_code, view_function = APP_ROUTES[environ['PATH_INFO']]
-            request.view_function = view_function.__name__
-        except KeyError: raise RouteNotFoundError(request.route)
+        for route in APP_ROUTES:
+            result = route(environ['PATH_INFO'])
+            if result:
+                status_code, view_function, data_kwargs = result
+                break
+        else:
+            raise RouteNotFoundError(request.route)
+        request.view_function = view_function.__name__
         
-        # Eval view function
-        data = view_function(request)
+        data = view_function(request, **data_kwargs)
         headers = [
             ('Content-type', 'text/html; charset=%s' % settings['ENCODING']),
             ('Content-Length', str(len(data))),

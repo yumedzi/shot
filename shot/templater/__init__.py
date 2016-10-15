@@ -2,6 +2,7 @@ import re
 import os
 import sys
 from collections import Iterable, Mapping
+from ast import literal_eval
 from operator import eq, not_, gt, lt, contains, is_not, is_, and_, or_
 
 from shot.exc import TemplateSyntaxError
@@ -30,12 +31,19 @@ def _get_item(expr, item, call=False):
     return expr
 
 def _calc_expression(expr, context):
+    if expr.startswith('"') and expr.endswith('"'):
+        print("!!!!! GOTCHA!")
+        return literal_eval(expr)
     pipes_parts = expr.split('|')
     expr = pipes_parts.pop(0)
     dot_parts = expr.split('.')
     expr = context.get(dot_parts.pop(0), None)
     for part in dot_parts: expr = _get_item(expr, part)
-    for part in pipes_parts: expr = _get_item(expr, part, call=True)
+    for part in pipes_parts: 
+        if not part == 'safe':
+            expr = _get_item(expr, part, call=True)
+        else:
+            expr = str(expr).replace('<', '&lt;').replace('>', '&gt;').replace(' ', '&nbsp;')
     return expr
 
 class StaticNode:
@@ -118,7 +126,6 @@ class ForNode:
             if not re.match(r"^for\s+[a-zA-Z]\w*\s*,\s*[a-zA-Z]\w*\s+in\s+[a-zA-Z]\w*(?:[\.|]items)?$", block):
                 raise TemplateSyntaxError("Wrong {%% for X, Y in DICT %%} syntax: %s" % block, line_num)
             self.loop_source, _  = for_items.pop().replace('.items', '').replace('|items', ''), for_items.pop()
-            print(self.loop_source)
             self.loop_key, self.loop_value = ''.join(for_items).split(',')
             self.mode = 'dict'
         self.loop_stack, self.empty_stack = [], []

@@ -8,6 +8,14 @@ class ShotException(BaseException, metaclass=ABCMeta):
     def __str__(self):
         pass
 
+class RouteFormatError(ShotException):
+    def __init__(self, route, msg="Wrong route format"):
+        self.route = route
+        self.msg = msg
+
+    def __str__(self):
+        return "RouteFormatError: %s in %s" % (self.msg, self.route)
+
 class RouteNotFoundError(ShotException):
     def __init__(self, route, msg="Route was not defined"):
         self.route = route
