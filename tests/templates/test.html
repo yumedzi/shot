@@ -20,15 +20,24 @@ name|upper|lower: {{ name|upper|lower }}<br/>
 {% if name == "vasya" %}ddddd{%endif %}<br/>
 <ul>
     {% for friend in friends %}
-    <li>FRIEND: {{ friend }}</li>
+    <li>FRIEND number {{ loopcounter }}: {{ friend }}</li>
         {% for e in enemies %}
-            <li>SUB item: {{ e }} (nested FOR)</li>
+            <li>SUB item : {{ e }} (nested FOR) | Is this first loop? {{ firstloop }}</li>
             {% if e == "3" %}
             <li style="margin-left: 20px;">LUCKY NUMBER 3 (nested IF in FOR is working)</li>
             {%endif%}
         {% endfor %}
     {% endfor %}      
 </ul>
+
+<p>Testing FOR/EMPTY:
+
+{% for x in empty_list %}
+...
+{% empty %}
+<span style='color:green'>TEST PASSED</span>
+{% endfor %}
+</p>
 
 {% if name == "Alexey" %}<p>YOU SEE THIS?<br/> {% if surname == "Boobin" %}NESTED: {{ surname|upper }}{%endif%}{% endif %}
 <br/>

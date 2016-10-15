@@ -124,25 +124,26 @@ class ForNode:
     def render(self, context):
         result = []
         loop_source = _calc_expression(self.loop_source, context)
-        try:
-            stack = self.empty_stack
-            if loop_source and len(loop_source):
-                stack = self.loop_stack
-        except TypeError:
-            raise TemplateSyntaxError("Not iterable in {%% for %%}: ", self.loop_source)
+        if not isinstance(loop_source, Iterable):
+            raise TemplateSyntaxError("Loop source is not iterable in {%% for %%} block: ", self.loop_source)
 
-        counter = 0
         if loop_source:
+            counter = 0
             for loop_variable in loop_source:
-                for node in stack:
+                for node in self.loop_stack:
                     updated_context = dict(context)
                     updated_context.update({
                         'loopcounter0': counter,
                         'loopcounter': counter + 1,
+                        'firstloop': True if counter == 0 else False,
+                        'lastloop': True if counter == (len(loop_source) - 1) else False,
                         self.loop_var: loop_variable,
                     })
                     result.append(node.render(updated_context))
                 counter += 1
+        else:
+            for node in self.empty_stack:
+                result.append(node.render(context))
         return ''.join(result)
 
     def __str__(self):
