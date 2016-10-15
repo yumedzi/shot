@@ -16,8 +16,8 @@ Features:
 * wrapping REQUEST (GET/POST, form multipart data) - YES
 * template engine - YES
 * dev server - YES
+* parametrized routing - YES
 * reloading dev server in DEBUG - NO
-* parametrized routing - NO
 * Docs - NO
 * REST API batteries - NO
 * ORM integration batteries - NO

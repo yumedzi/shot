@@ -31,9 +31,6 @@ def _get_item(expr, item, call=False):
     return expr
 
 def _calc_expression(expr, context):
-    if expr.startswith('"') and expr.endswith('"'):
-        print("!!!!! GOTCHA!")
-        return literal_eval(expr)
     pipes_parts = expr.split('|')
     expr = pipes_parts.pop(0)
     dot_parts = expr.split('.')
