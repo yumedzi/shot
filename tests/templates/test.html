@@ -30,6 +30,13 @@ name|upper|lower: {{ name|upper|lower }}<br/>
     {% endfor %}      
 </ul>
 
+<p>Testing FOR X, Y in DICT.items</p>
+<ul>
+    {% for k, v in test_dict.items %}
+    <li>KEY: {{k }}/ VALUE: {{v}}</li>
+    {% endfor %}
+</ul>
+
 <p>Testing FOR/EMPTY:
 
 {% for x in empty_list %}

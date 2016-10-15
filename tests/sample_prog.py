@@ -31,7 +31,7 @@ def hello(request):
     context = {'date': datetime.datetime.utcnow().strftime("%a, %d %b %Y %X"), 
                "enemies": [1,2,"3"],  "surname": "Boobin", "name": "Alexey", 
                "friends": ["John", "Vasta", "Boobaoom"],
-               "empty_var": (), "empty_list": [],
+               "empty_var": (), "empty_list": [], 'test_dict': {x:1 for x in "ABC"}
     }
 
     return render(template, context)

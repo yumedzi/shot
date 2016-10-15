@@ -1,7 +1,7 @@
 import re
 import os
 import sys
-from collections import Iterable
+from collections import Iterable, Mapping
 from operator import eq, not_, gt, lt, contains, is_not, is_, and_, or_
 
 from shot.exc import TemplateSyntaxError
@@ -109,9 +109,18 @@ class IfNode:
 class ForNode:
     def __init__(self, block, parent, line_num=None):
         self.parent = parent
-        for_items = block.split()
-        if len(for_items) != 4 or for_items[2] != 'in': raise TemplateSyntaxError("Wrong {%% for x in y %%} syntax: %s" % block, line_num)
-        self.loop_stack, self.empty_stack, self.loop_var, self.loop_source = [], [], for_items[1], for_items[3]
+        for_items = block.split()[1:]
+        if ',' not in block:
+            if len(for_items) != 3 or for_items[1] != 'in': raise TemplateSyntaxError("Wrong {%% for X in LIST %%} syntax: %s" % block, line_num)
+            self.loop_var, self.loop_source= for_items[0], for_items[2]
+            self.mode = 'list' 
+        else:
+            if not re.match(r"for\s+[a-zA-Z]\w*\s*,\s*[a-zA-Z]\w*\s+in\s+[a-zA-Z]\w*\.items", block):
+                TemplateSyntaxError("Wrong {%% for X, Y in DICT %%} syntax: %s" % block, line_num)
+            self.loop_source, _  = for_items.pop().replace('.items', ''), for_items.pop()
+            self.loop_key, self.loop_value = ''.join(for_items).split(',')
+            self.mode = 'dict'
+        self.loop_stack, self.empty_stack = [], []
         self.stack = self.loop_stack
 
     def add(self, node):
@@ -126,7 +135,8 @@ class ForNode:
         loop_source = _calc_expression(self.loop_source, context)
         if not isinstance(loop_source, Iterable):
             raise TemplateSyntaxError("Loop source is not iterable in {%% for %%} block: ", self.loop_source)
-
+        if self.mode == 'dict' and not isinstance(loop_source, Mapping):
+            raise TemplateSyntaxError("Loop source is not mapping in {%% for x, y in dict.items %%} block: ", self.loop_source)
         if loop_source:
             counter = 0
             for loop_variable in loop_source:
@@ -137,8 +147,14 @@ class ForNode:
                         'loopcounter': counter + 1,
                         'firstloop': True if counter == 0 else False,
                         'lastloop': True if counter == (len(loop_source) - 1) else False,
-                        self.loop_var: loop_variable,
                     })
+                    if self.mode == 'list': 
+                        updated_context.update({
+                            self.loop_var: loop_variable})
+                    else:
+                        updated_context.update({
+                            self.loop_key: loop_variable,
+                            self.loop_value: loop_source[loop_variable]})
                     result.append(node.render(updated_context))
                 counter += 1
         else:
@@ -227,26 +243,24 @@ class Templater:
                 self.current_section.add(new_node)
             elif part.startswith('{%'):
                 block = part[2:-2].strip()
-                if block.startswith('if'):
+                if block.startswith('if '):
                     new_node = IfNode(block, self.current_section)
                     self.current_section.add(new_node)
                     self.current_section = new_node
-                elif block.startswith("else"):
+                elif block == "else":
                     try:
                         self.current_section.process_else(block)
                     except AttributeError:
                         raise TemplateSyntaxError("Wrong {%% else %%} placement", part, line_num)
-                elif block.startswith("endif"):
-                    if block != "endif":
-                        raise TemplateSyntaxError("Wrong {%% endif %%} syntax", part, line_num)
+                elif block == "endif":
                     if not isinstance(self.current_section, IfNode):
                         raise TemplateSyntaxError("Wrong {%% endif %%} placement", part, line_num)
                     self.current_section = self.current_section.parent
-                elif block.startswith("for"):
+                elif block.startswith("for "):
                     new_node = ForNode(block, self.current_section)
                     self.current_section.add(new_node)
                     self.current_section = new_node
-                elif block.startswith("empty"):
+                elif block == "empty":
                     try:
                         self.current_section.process_empty(block)
                     except AttributeError:
@@ -279,7 +293,7 @@ class Templater:
                     if not isinstance(self.current_section, BlockNode):
                         raise TemplateSyntaxError("Wrong {% endblock %} placement, you should close other nodes first", part, line_num)
                     self.current_section = self
-                elif block.startswith("extends"):
+                elif block.startswith("extends "):
                     if self.current_section != self:
                         raise TemplateSyntaxError("Wrong placement of {% extends ... %} - it can't be nested in other nodes", part, line_num)
                     ext_items = block.split()
@@ -287,7 +301,7 @@ class Templater:
                         raise TemplateSyntaxError("Wrong syntax for {% extends ... %}", part, line_num)
                     template_filename = ext_items[1].replace("'", '').replace('"', '')
                     self.extend(Templater(template_filename, {}, True))
-                elif block.startswith("with"):
+                elif block.startswith("with "):
                     new_node = WithNode(block, self.current_section, line_num)
                     self.current_section.add(new_node)
                     self.current_section = new_node
@@ -297,6 +311,8 @@ class Templater:
                     if not isinstance(self.current_section, WithNode):
                         raise TemplateSyntaxError("Wrong {% endwith %} placement", part, line_num)
                     self.current_section = self.current_section.parent
+                else:
+                    raise TemplateSyntaxError("Wrong or unsupported block", part, line_num)
             else:
                 self.current_section.add(StaticNode(part))
         return ""
