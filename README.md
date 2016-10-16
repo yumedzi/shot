@@ -4,10 +4,10 @@ shot is Python super micro web framework. It is designed to be super fast and su
 
 Features:
 
+* parametrized routing
 * builtin Jinja-like template engine
 * dev web server
 * batteries for creating simple REST API.
-* injection of `request` object (WSGI request wrapper) into views like in Flask.
 * it can be used with SQLAlchemy as ORM.
 
 # Current status #
